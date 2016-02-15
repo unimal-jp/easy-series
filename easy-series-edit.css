@@ -1,0 +1,54 @@
+#easy-series table {
+	margin: 0;
+	width: 100%;
+	border: 1px solid #dfdfdf;
+	border-spacing: 0;
+	background-color: #f9f9f9;
+}
+
+#easy-series tr {
+	vertical-align: top;
+}
+
+#easy-series td.left {
+	width: 38%;
+}
+
+#easy-series td.right {
+	text-align: center;
+}
+
+#easy-series td.left select {
+	width: 96%;
+	margin: 8px;
+}
+
+#easy-series table td.right select {
+	width: 200px;
+	margin: 8px;
+}
+
+#easy-series table td.right input {
+	width: 200px;
+	margin: 8px;
+}
+
+#easy-series td>div {
+	width: 96%;
+	margin: 8px;
+}
+
+#easy-series .submit {
+    border: 0;
+    float: none;
+    padding: 0 0 8px;
+}
+
+#easy-series .submit input {
+    margin: 0;
+    width: auto;
+}
+
+#easy-series .submit input.easy-series-delete-btn {
+	margin-top: 10px;
+}

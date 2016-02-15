@@ -1,0 +1,28 @@
+.easy-series-toc {
+	background-color: #f9f9f9;
+	padding-left: 10px;
+	padding-right: 10px;
+}
+
+.easy-series-toc table {
+	border: 0;
+}
+
+.easy-series-toc table th {
+	border: 0;
+	border-bottom: 2px solid #d1d1d1;
+}
+
+.easy-series-toc table th:nth-of-type(2) {
+	font-weight: normal;
+	text-align: right;
+	width: 30%;
+}
+
+.easy-series-toc table td {
+	border: 0;
+}
+
+.easy-series-toc table td:nth-of-type(2) {
+	text-align: right;
+}
