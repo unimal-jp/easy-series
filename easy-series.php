@@ -679,7 +679,7 @@ class Easy_Series {
 			<table class="<?php echo self::PLUGIN_PREFIX; ?>toc-table">
 				<thead>
 					<tr>
-						<th>[連載]<?php echo( esc_html( $series->title ) ); ?></th>
+						<th>[連載] <?php echo( esc_html( $series->title ) ); ?></th>
 						<th>公開日</th>
 					</tr>
 				</thead>
