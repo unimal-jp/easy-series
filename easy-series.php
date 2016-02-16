@@ -674,12 +674,17 @@ class Easy_Series {
 
 		$posts_series = self::$posts_series_db->find_by_series_id( $series->id );
 
+		$series_title = $series->title;
+		if (($series->number_of_times != null) && ($series->number_of_times > 0)) {
+			$series_title = sprintf("%s 【全%d回】", $series_title, $series->number_of_times);
+		}
+
 ?>
 		<div class="<?php echo self::PLUGIN_PREFIX; ?>toc">
 			<table class="<?php echo self::PLUGIN_PREFIX; ?>toc-table">
 				<thead>
 					<tr>
-						<th>[連載] <?php echo( esc_html( $series->title ) ); ?></th>
+						<th><?php echo( esc_html( $series_title ) ); ?></th>
 						<th>公開日</th>
 					</tr>
 				</thead>
