@@ -23,6 +23,7 @@ class Easy_Series_Db {
 			"status VARCHAR(16)," .
 			"title_format TEXT," .
 			"list_title_format TEXT," .
+			"positions VARCHAR(32)," .
 			"created_at DATETIME," .
 			"updated_at DATETIME, " .
 			"PRIMARY KEY (id)

@@ -405,19 +405,32 @@ class Easy_Series {
 			return $content;
 		}
 
-		$content = $this->get_toc_html( $series, get_the_ID() ) . $content;
+		$toc_thml = $this->get_toc_html( $series, get_the_ID() );
+
+		$positions = explode( ',', $series->positions );
+
+		$pos_header = false;
+		$pos_footer = false;
+		foreach ($positions as $position) {
+			if ($position == 'header') {
+				$pos_header = true;
+			} elseif ($position == 'footer') {
+				$pos_footer = true;
+			}
+		}
+
+		if ($pos_header) {
+			$content = $toc_thml . $content;
+		}
+		if ($pos_footer) {
+			$content = $content . $toc_thml;
+		}
 
 		return $content;
 	}
 
 	private function add_series() {
-		$data = array(
-			'title'					=> $_POST[self::PLUGIN_PREFIX . 'title'],
-			'number_of_times'		=> (empty( $_POST[self::PLUGIN_PREFIX . 'number_of_times'] ))? 0 : $_POST[self::PLUGIN_PREFIX . 'number_of_times'],
-			'status'				=> $_POST[self::PLUGIN_PREFIX . 'status'],
-			'title_format'			=> $_POST[self::PLUGIN_PREFIX . 'title-format'],
-			'list_title_format'		=> $_POST[self::PLUGIN_PREFIX . 'list-title-format'],
-		);
+		$data = $this->get_series_params();
 
 		$id = self::$series_db->create( $data );
 
@@ -425,17 +438,33 @@ class Easy_Series {
 	}
 
 	private function update_series( $id ) {
-		$data = array(
-			'title'				=> $_POST[self::PLUGIN_PREFIX . 'title'],
-			'number_of_times'	=> empty( $_POST[self::PLUGIN_PREFIX . 'number_of_times'] )? 0 : $_POST[self::PLUGIN_PREFIX . 'number_of_times'],
-			'status'			=> $_POST[self::PLUGIN_PREFIX . 'status'],
-			'title_format'			=> $_POST[self::PLUGIN_PREFIX . 'title-format'],
-			'list_title_format'		=> $_POST[self::PLUGIN_PREFIX . 'list-title-format'],
-		);
+		$data = $this->get_series_params();
 
 		self::$series_db->update( $id, $data );
 
 		wp_redirect( $this->get_settings_top_url() );
+	}
+
+	private function get_series_params() {
+		$positions = array();
+		if (isset( $_POST[self::PLUGIN_PREFIX . 'pos-header'] )) {
+			$positions[] = $_POST[self::PLUGIN_PREFIX . 'pos-header'];
+		}
+		if (isset( $_POST[self::PLUGIN_PREFIX . 'pos-footer'] )) {
+			$positions[] = $_POST[self::PLUGIN_PREFIX . 'pos-footer'];
+		}
+		$positions = implode(',', $positions);
+		
+		$data = array(
+			'title'					=> $_POST[self::PLUGIN_PREFIX . 'title'],
+			'number_of_times'		=> (empty( $_POST[self::PLUGIN_PREFIX . 'number_of_times'] ))? 0 : $_POST[self::PLUGIN_PREFIX . 'number_of_times'],
+			'status'				=> $_POST[self::PLUGIN_PREFIX . 'status'],
+			'positions'				=> $positions,
+			'title_format'			=> $_POST[self::PLUGIN_PREFIX . 'title-format'],
+			'list_title_format'		=> $_POST[self::PLUGIN_PREFIX . 'list-title-format'],
+		);
+
+		return $data;	
 	}
 
 	private function delete_series( $id ) {
@@ -509,8 +538,9 @@ class Easy_Series {
 
 			<table class="wp-list-table widefat fixed striped">
 				<thead> 
-					<th>タイトル</th>
+					<th>連載タイトル</th>
 					<th>回数</th>
+					<th>一覧表示位置</th>
 					<th>作成済み回</th>
 					<th>最新の公開日時</th>
 					<th>状態</th>
@@ -521,6 +551,10 @@ class Easy_Series {
 					<?php foreach ( $series_list as $series ) { 
 
 						$number_of_times = ($series->number_of_times == 0)? '未定' : $series->number_of_times;
+
+						$positions = str_replace( 'header', '記事冒頭', $series->positions );
+						$positions = str_replace( 'footer', '記事末尾', $positions );
+						$positions = str_replace( ',', ', ', $positions );
 
 						if ($series->latest_post_date == '') {
 							$latest_post_date = '';
@@ -535,6 +569,7 @@ class Easy_Series {
 						<tr>
 							<td><?php echo( esc_html( $series->title ) ); ?></td>
 							<td><?php echo( esc_html( $number_of_times ) ); ?></td>
+							<td><?php echo( esc_html( $positions ) ); ?></td>
 							<td><?php echo( esc_html( join(', ', $series->numbers ) ) ); ?></td>
 							<td><?php echo( esc_html( $latest_post_date ) ); ?></td>
 							<td><?php echo( esc_html( $this->get_status_name( $series->status ) ) ); ?></td>
@@ -571,8 +606,18 @@ class Easy_Series {
 			$status = $series->status;
 
 			$title_format = $series->title_format;
-			$list_title_format = $series->list_title_format;			
+			$list_title_format = $series->list_title_format;
 
+			$pos_header = false;
+			$pos_footer = false;
+			$positions = explode( ',', $series->positions );
+			foreach ($positions as $position) {
+				if ($position == 'header') {
+					$pos_header = true;
+				} elseif ($position == 'footer') {
+					$pos_footer = true;
+				}
+			}
 
 			$submit_name = self::PLUGIN_PREFIX . 'edit';
 			$sub_title = '連載の編集';
@@ -586,8 +631,21 @@ class Easy_Series {
 			$title_format = $this->get_default_title_format();
 			$list_title_format = $this->get_default_list_title_format();
 
+			$pos_header = true;
+			$pos_footer = true;
+
 			$submit_name = self::PLUGIN_PREFIX . 'add';
 			$sub_title = '連載の追加';
+		}
+
+		$pos_header_checked = '';
+		$pos_footer_checked = '';
+
+		if ($pos_header) {
+			$pos_header_checked = 'checked="checked"';
+		}
+		if ($pos_footer) {
+			$pos_footer_checked = 'checked="checked"';
 		}
 ?>
 		<div>
@@ -598,7 +656,7 @@ class Easy_Series {
 				<input type="hidden" name="<?php echo self::PLUGIN_PREFIX; ?>id" value="<?php echo( esc_attr( $id ) ) ?>" /> 
 				<table class="form-table">
 					<tr>
-						<th>タイトル</th>
+						<th>連載タイトル</th>
 						<td>(必須)</td>
 						<td>
 							<input type="text" class="regular-text" required="required" name="<?php echo self::PLUGIN_PREFIX; ?>title" value="<?php echo( esc_attr( $title ) ) ?>" />
@@ -610,6 +668,15 @@ class Easy_Series {
 						<td></td>
 						<td>
 							<input type="number" class="regular-text" name="<?php echo self::PLUGIN_PREFIX; ?>number_of_times" value="<?php echo( esc_attr( $number_of_times ) ) ?>" />
+						</td>
+					</tr>
+
+					<tr>
+						<th>記事内の一覧表示位置</th>
+						<td></td>
+						<td>
+							<input type="checkbox" name="<?php echo self::PLUGIN_PREFIX; ?>pos-header" <?php echo $pos_header_checked; ?> value="header">記事冒頭
+							<input type="checkbox" name="<?php echo self::PLUGIN_PREFIX; ?>pos-footer" <?php echo $pos_footer_checked; ?> value="footer">記事末尾
 						</td>
 					</tr>
 
@@ -679,17 +746,16 @@ class Easy_Series {
 			$series_title = sprintf("%s 【全%d回】", $series_title, $series->number_of_times);
 		}
 
-?>
-		<div class="<?php echo self::PLUGIN_PREFIX; ?>toc">
-			<table class="<?php echo self::PLUGIN_PREFIX; ?>toc-table">
-				<thead>
-					<tr>
-						<th><?php echo( esc_html( $series_title ) ); ?></th>
-						<th>公開日</th>
-					</tr>
-				</thead>
-				<tbody>
-<?php				
+		$html  = '<div class="' . self::PLUGIN_PREFIX . 'toc">';
+		$html .= '  <table class="' . self::PLUGIN_PREFIX. 'toc-table">';
+		$html .= '    <thead>';
+		$html .= '      <tr>';
+		$html .= '        <th>' . esc_html( $series_title ) . '</th>';
+		$html .= '        <th>公開日</th>';
+		$html .= '      </tr>';
+		$html .= '    </thead>';
+		$html .= '    <tbody>';
+				
 		foreach ($posts_series as $post_series) {
 			$post = get_post( $post_series->post_id );
 			if ($post == null) {
@@ -722,23 +788,27 @@ class Easy_Series {
 				$public_date = '未公開';
 				$link = '';	
 			}
-?>
-					<tr>
-						<td>
-<?php if ($link == '') { ?>
-							<?php echo( esc_html( $title ) ); ?>
-<?php } else {?>
-							<a href="<?php echo( esc_url( $link ) ); ?>"><?php echo( esc_html( $title ) ); ?></a>
-<?php } ?>						
-						</td>
-						<td><?php echo( esc_html( $public_date ) ); ?></td>
-					<tr>
-<?php } ?>
-				</tbody>
-			</table>
-		</div>
 
-<?php
+			$html .= '      <tr>';
+
+			$html .= '        <td>';
+			if ($link == '') { 
+				$html .= esc_html( $title );
+			} else {
+				$html .= '<a href="' . esc_url( $link ) . '">' . esc_html( $title ). '</a>';
+			}
+			$html .= '        </td>';
+
+			$html .= '<td>' . esc_html( $public_date ). '</td>';
+
+			$html .= '      </tr>';
+		}
+
+		$html .= '    </tbody>';
+		$html .= '  </table>';
+		$html .= '</div>';		
+
+		return $html;
 	}
 
 	private function get_settings_url( $page ) {
